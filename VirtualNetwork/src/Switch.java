@@ -1,30 +1,20 @@
-import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-class Frame {
-    String srcMac;
-    int inPort;
-    String srcIp;
-    String destMac;
-
-    public Frame(String srcMac, int inPort, String srcIp, String destMac) {
-        this.srcMac = srcMac;
-        this.inPort = inPort;
-        this.srcIp = srcIp;
-        this.destMac = destMac;
-    }
-}
-
-class Switch {
+public class Switch {
     String name;
     int port;
     Map<String, Map<String, Object>> forwardingTable;
+    List<Device> connectedDevices;
+
 
     public Switch(String name, int port) {
         this.name = name;
         this.port = port;
         this.forwardingTable = new HashMap<>();
+        this.connectedDevices = new ArrayList<>();
     }
 
     public void receiveFrame(Frame frame) {
@@ -48,5 +38,10 @@ class Switch {
         } else {
             System.out.println("Destination MAC address not found in forwarding table. Flooding the frame.");
         }
+    }
+
+    public void connect(Device device) {
+        connectedDevices.add(device);
+        System.out.println(device.getName() + " connected to " + name);
     }
 }
