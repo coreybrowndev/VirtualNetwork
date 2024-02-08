@@ -1,0 +1,60 @@
+{
+  "devices": [
+    {
+      "connectedDevice": "s1",
+      "port": 3000,
+      "ip": "192.168.1.2",
+      "name": "A"
+    },
+    {
+      "connectedDevice": "s1",
+      "port": 3000,
+      "ip": "192.168.1.4",
+      "name": "B"
+    },
+    {
+      "connectedDevice": "s2",
+      "port": 3001,
+      "ip": "192.168.1.5",
+      "name": "C"
+    },
+    {
+      "connectedDevice": "s2",
+      "port": 3001,
+      "ip": "192.168.1.3",
+      "name": "D"
+    }
+  ],
+  "switches": [
+    {
+      "port": 3000,
+      "name": "s1"
+    },
+    {
+      "port": 3001,
+      "name": "s2"
+    }
+  ],
+  "links": [
+    {
+      "node2": "A",
+      "node1": "s1"
+    },
+    {
+      "node2": "B",
+      "node1": "s1"
+    },
+    {
+      "node2": "s2",
+      "node1": "s1"
+    },
+    {
+      "node2": "C",
+      "node1": "s2"
+    },
+    {
+      "node2": "D",
+      "node1": "s2"
+    }
+  ]
+}
