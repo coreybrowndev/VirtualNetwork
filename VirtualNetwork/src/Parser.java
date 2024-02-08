@@ -88,7 +88,6 @@ public class Parser {
             updatedDevice.put("port", port);
             updatedDevices.add(updatedDevice);
         }
-
         data.put("devices", updatedDevices);
     }
 
@@ -110,6 +109,5 @@ public class Parser {
         }else {
             System.out.println("Failed to parse file");
         }
-
     }
 }

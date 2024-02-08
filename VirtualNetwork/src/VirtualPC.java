@@ -4,6 +4,11 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class VirtualPC implements Runnable {
     private String ipAddress;
@@ -73,6 +78,22 @@ public class VirtualPC implements Runnable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public class UserMessage implements Callable<String> {
+
+        //Create new executor in the PC class
+        Executors service = Executors.newFixedThreadPool();
+
+        //call service.submit to submit an instance of the UserMessage task
+
+        @Override
+        public String call() throws Exception {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Please enter your message:");
+            String userInput = scanner.nextLine();
+            return userInput;
         }
     }
 }
