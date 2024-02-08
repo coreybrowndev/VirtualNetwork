@@ -55,7 +55,7 @@ public class VirtualPC implements Runnable {
     }
 
     public static void main(String[] args) {
-        Switch ethernetSwitch = new Switch();
+        Switch ethernetSwitch = new Switch("s1", 3000);
         VirtualPC pc = new VirtualPC("127.0.0.1", "5000", "A", ethernetSwitch);
         Thread pcThread = new Thread(pc);
         pcThread.start();

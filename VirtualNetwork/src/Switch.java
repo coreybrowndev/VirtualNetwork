@@ -6,7 +6,7 @@ import java.util.Map;
 public class Switch {
     String name;
     int port;
-    Map<String, Map<String, Object>> forwardingTable;
+    Map<String, String> forwardingTable;
     List<Device> connectedDevices;
 
 
@@ -17,24 +17,18 @@ public class Switch {
         this.connectedDevices = new ArrayList<>();
     }
 
+    //TODO get sender's UDP Pocket
     public void receiveFrame(Frame frame) {
         String sourceMac = frame.srcMac;
-        if (forwardingTable.containsKey(sourceMac)) {
-            Map<String, Object> entry = forwardingTable.get(sourceMac);
-            entry.put("port", frame.inPort);
-            entry.put("ip", frame.srcIp);
-        } else {
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("port", frame.inPort);
-            entry.put("ip", frame.srcIp);
-            forwardingTable.put(sourceMac, entry);
+        if (!forwardingTable.containsKey(sourceMac)) {
+            forwardingTable.put(sourceMac, "ip + port of the device");
         }
     }
 
-    public void forwardFrame(Frame frame, String destMac) {
-        if (forwardingTable.containsKey(destMac)) {
-            int port = (int) forwardingTable.get(destMac).get("port");
-            System.out.println("Forwarding frame to port " + port);
+    public void forwardFrame(Frame frame) {
+        if (forwardingTable.containsKey(frame.destMac)) {
+            String destinationPort = forwardingTable.get(frame.destMac);
+            System.out.println("Forwarding frame to port " + destinationPort);
         } else {
             System.out.println("Destination MAC address not found in forwarding table. Flooding the frame.");
         }

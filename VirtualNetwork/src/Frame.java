@@ -1,13 +1,11 @@
 class Frame {
     String srcMac;
-    int inPort;
-    String srcIp;
     String destMac;
+    String message;
 
-    public Frame(String srcMac, int inPort, String srcIp, String destMac) {
+    public Frame(String srcMac, String message, String destMac) {
         this.srcMac = srcMac;
-        this.inPort = inPort;
-        this.srcIp = srcIp;
+        this.message = message;
         this.destMac = destMac;
     }
 }
