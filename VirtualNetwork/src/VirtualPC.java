@@ -82,12 +82,9 @@ public class VirtualPC implements Runnable {
     }
 
     public class UserMessage implements Callable<String> {
-
         //Create new executor in the PC class
         Executors service = Executors.newFixedThreadPool();
-
         //call service.submit to submit an instance of the UserMessage task
-
         @Override
         public String call() throws Exception {
             Scanner scanner = new Scanner(System.in);
