@@ -92,6 +92,9 @@ public class VirtualPC implements Runnable {
         Thread pcThread = new Thread(pc);
         pcThread.start();
 
+
+        // Wait for user input
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
             pc.startUserInputListener();
         }
