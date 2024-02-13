@@ -15,12 +15,14 @@ public class VirtualPC implements Runnable {
     private String portNumber;
     private String virtualMACAddress;
     private Switch ethernetSwitch;
+    private ExecutorService executor;
 
     public VirtualPC(String ipAddress, String portNumber, String virtualMACAddress, Switch ethernetSwitch) {
         this.ipAddress = ipAddress;
         this.portNumber = portNumber;
         this.virtualMACAddress = virtualMACAddress;
         this.ethernetSwitch = ethernetSwitch;
+        this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
     }
 
     public void run() {
@@ -59,43 +61,42 @@ public class VirtualPC implements Runnable {
         }
     }
 
+
+    public void startUserInputListener() {
+        Future<String> userInputFuture = executor.submit(new UserMessage());
+        try {
+            String userInput = userInputFuture.get();
+            System.out.println("User input: " + userInput);
+            // Process user input as needed
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void shutdown() {
+        executor.shutdown();
+    }
+
+    private class UserMessage implements Callable<String> {
+        @Override
+        public String call() throws Exception {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Please enter your message:");
+            return scanner.nextLine();
+        }
+    }
+
     public static void main(String[] args) {
         Switch ethernetSwitch = new Switch("s1", 3000);
         VirtualPC pc = new VirtualPC("127.0.0.1", "5000", "A", ethernetSwitch);
         Thread pcThread = new Thread(pc);
         pcThread.start();
 
-
-        // Wait for user input
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         while (true) {
-            try {
-                System.out.print("Enter destination MAC address: ");
-                String destinationMAC = reader.readLine();
-                System.out.print("Enter message: ");
-                String message = reader.readLine();
-                pc.sendMessage(destinationMAC, message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public class UserMessage implements Callable<String> {
-
-        //Create new executor in the PC class
-        Executors service = Executors.newFixedThreadPool();
-
-        //call service.submit to submit an instance of the UserMessage task
-
-        @Override
-        public String call() throws Exception {
-            Scanner scanner = new Scanner(System.in);
-            System.out.println("Please enter your message:");
-            String userInput = scanner.nextLine();
-            return userInput;
+            pc.startUserInputListener();
         }
     }
 }
+
 
 

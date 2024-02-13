@@ -13,7 +13,7 @@ import java.util.Map;
 public class Parser {
     public static String collectJsonAsString(String filename) {
         //take the device and find the device in the config file, use the algorithm to build the relationship and return a new json file with the relationship built for the device in question
-                        //first parse links to get the neighors from "s1" for example, then parse the devices to get the IP and port for each neighbor
+                        //first parse links to get the neighbors from "s1" for example, then parse the devices to get the IP and port for each neighbor
         //open file
         String jsonText = "";
 
