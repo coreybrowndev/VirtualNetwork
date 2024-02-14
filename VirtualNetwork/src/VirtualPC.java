@@ -13,21 +13,23 @@ import java.util.concurrent.Future;
 public class VirtualPC extends Device implements Runnable {
 
     private String virtualMACAddress;
-    private Switch ethernetSwitch;
     private ExecutorService executor;
 
-    public VirtualPC(String name, String ip, int port, Switch ethernetSwitch) {
-        super(name, ip, port);
+    public VirtualPC(String name) {
+        super(name);
         virtualMACAddress = name;
-        this.ethernetSwitch = ethernetSwitch;
-//        this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
+        this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
+        //TODO: create new task
+        //TODO: submit task
     }
+
 
     public void run() {
         try {
             DatagramSocket socket = new DatagramSocket(port);
             byte[] receiveData = new byte[1024];
             while (true) {
+                //TODO: Scanner in a separate thread for user input
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(receivePacket);
                 String receivedData = new String(receivePacket.getData(), 0, receivePacket.getLength());
@@ -45,19 +47,19 @@ public class VirtualPC extends Device implements Runnable {
         }
     }
 
-    public void sendMessage(String destinationMAC, String message) {
-        try {
-            DatagramSocket socket = new DatagramSocket();
-            String frameData = destinationMAC + "," + message;
-            byte[] sendData = frameData.getBytes();
-            InetAddress address = InetAddress.getByName(ip);
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
-            socket.send(sendPacket);
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendMessage(String destinationMAC, String message) {
+//        try {
+//            DatagramSocket socket = new DatagramSocket();
+//            String frameData = destinationMAC + "," + message;
+//            byte[] sendData = frameData.getBytes();
+//            InetAddress address = InetAddress.getByName(ip);
+//            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
+//            socket.send(sendPacket);
+//            socket.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
 
     public void startUserInputListener() {
@@ -84,19 +86,18 @@ public class VirtualPC extends Device implements Runnable {
         }
     }
 
-//    public static void main(String[] args) {
-//        Switch ethernetSwitch = new Switch();
-//        VirtualPC pc = new VirtualPC("127.0.0.1", "5000", "A", ethernetSwitch);
-//        Thread pcThread = new Thread(pc);
-//        pcThread.start();
-//
-//
-//        // Wait for user input
-//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-//        while (true) {
-//            pc.startUserInputListener();
-//        }
-//    }
+    public static void main(String[] args) {
+        VirtualPC pc = new VirtualPC(args[1]);
+        Thread pcThread = new Thread(pc);
+        pcThread.start();
+
+
+        // Wait for user input
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        while (true) {
+            pc.startUserInputListener();
+        }
+    }
 }
 
 

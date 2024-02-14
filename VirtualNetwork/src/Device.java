@@ -1,3 +1,7 @@
+import org.json.simple.JSONObject;
+
+import java.security.ProtectionDomain;
+import java.util.List;
 import java.util.Objects;
 
 public class Device {
@@ -5,23 +9,42 @@ public class Device {
     protected String ip;
     protected int port;
 
-    public Device(String name, String ip, Integer port) {
-        this.name = name;
-        this.ip = ip;
-        this.port = port;
+    protected List<Device> connectedDevices;
+
+    JSONObject jsonData = Parser.parseJSONFile("src/NetworkConfig.json");
+
+
+    public Device(String name) {
+        //Use Parser to get ip and port of the device
+         ip = Parser.getDeviceIp(jsonData, name);
+         port = Parser.getDevicePort(jsonData, name);
+        connectedDevices = Parser.getNeighbors(jsonData, this.name);
     }
 
-    public String setName(String newName) {
-        return name = newName;
+    protected String getName() {
+        return this.name;
     }
 
-    public String setIp(String newIp) {
-        return ip = newIp;
+    // Getter method for the ip property
+    public String getIp() {
+        return ip;
     }
 
-    public Integer setPort(Integer newPort) {
-        return port = newPort;
+    // Getter method for the port property
+    public int getPort() {
+        return port;
     }
+
+    // Getter method for the connectedDevices property
+    public List<Device> getConnectedDevices() {
+        return connectedDevices;
+    }
+
+    //TODO: receive and send udp packet
+
+
+    //TODO: UDP datagram packet (srcIP, srcPort, frame would be the payload)
+    //TODO: 1 threads for receiving one for taking input and build UDP packet
 
     @Override
     public String toString() {

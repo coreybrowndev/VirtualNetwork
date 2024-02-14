@@ -2,12 +2,10 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class Parser {
 
@@ -23,19 +21,59 @@ public class Parser {
         return null;
     }
 
-    private static Device getDeviceInfo(JSONArray devices, JSONArray switches, String deviceName) {
+    public static String getDeviceIp(JSONObject data, String deviceName) {
+        JSONArray devices = (JSONArray) data.get("devices");
+        JSONArray switches = (JSONArray) data.get("switches");
+
         for (Object obj : devices) {
             JSONObject deviceObj = (JSONObject) obj;
             if (deviceObj.get("name").equals(deviceName)) {
-                return new Device((String) deviceObj.get("name"), (String) deviceObj.get("ip"), Math.toIntExact((Long) deviceObj.get("port")));
+                return deviceObj.get("ip").toString();
             }
         }
 
         for (Object obj : switches) {
             JSONObject switchObj = (JSONObject) obj;
             if (switchObj.get("name").equals(deviceName)) {
-                return new Device((String) switchObj.get("name"), (String) switchObj.get("ip"),
-                        Math.toIntExact((Long) switchObj.get("port")));
+                return switchObj.get("ip").toString();
+            }
+        }
+        return "";
+    }
+
+    public static Integer getDevicePort(JSONObject data, String deviceName) {
+        JSONArray devices = (JSONArray) data.get("devices");
+        JSONArray switches = (JSONArray) data.get("switches");
+
+        for (Object obj : devices) {
+            JSONObject deviceObj = (JSONObject) obj;
+            if (deviceObj.get("name").equals(deviceName)) {
+                return Integer.parseInt(deviceObj.get("port").toString());
+            }
+        }
+
+        for (Object obj : switches) {
+            JSONObject switchObj = (JSONObject) obj;
+            if (switchObj.get("name").equals(deviceName)) {
+                return Integer.parseInt(switchObj.get("port").toString());
+            }
+        }
+        return null;
+    }
+
+
+    private static Device getDeviceList(JSONArray devices, JSONArray switches, String deviceName) {
+        for (Object obj : devices) {
+            JSONObject deviceObj = (JSONObject) obj;
+            if (deviceObj.get("name").equals(deviceName)) {
+                return new Device((String) deviceObj.get("name"));
+            }
+        }
+
+        for (Object obj : switches) {
+            JSONObject switchObj = (JSONObject) obj;
+            if (switchObj.get("name").equals(deviceName)) {
+                return new Device((String) switchObj.get("name"));
             }
         }
         return null;
@@ -53,9 +91,9 @@ public class Parser {
             String node2 = (String) linkObj.get("node2");
 
             if (node1.equals(deviceName)) {
-                neighbors.add(getDeviceInfo(devices, switches, node2));
+                neighbors.add(getDeviceList(devices, switches, node2));
             } else if (node2.equals(deviceName)) {
-                neighbors.add(getDeviceInfo(devices, switches, node1));
+                neighbors.add(getDeviceList(devices, switches, node1));
             }
         }
         return neighbors;
