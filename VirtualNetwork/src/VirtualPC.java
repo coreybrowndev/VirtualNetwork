@@ -10,22 +10,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class VirtualPC implements Runnable {
-    private String ipAddress;
-    private String portNumber;
+public class VirtualPC extends Device implements Runnable {
+
     private String virtualMACAddress;
     private Switch ethernetSwitch;
+    private ExecutorService executor;
 
-    public VirtualPC(String ipAddress, String portNumber, String virtualMACAddress, Switch ethernetSwitch) {
-        this.ipAddress = ipAddress;
-        this.portNumber = portNumber;
-        this.virtualMACAddress = virtualMACAddress;
+    public VirtualPC(String name, String ip, int port, Switch ethernetSwitch) {
+        super(name, ip, port);
+        virtualMACAddress = name;
         this.ethernetSwitch = ethernetSwitch;
+//        this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
     }
 
     public void run() {
         try {
-            DatagramSocket socket = new DatagramSocket(Integer.parseInt(portNumber));
+            DatagramSocket socket = new DatagramSocket(port);
             byte[] receiveData = new byte[1024];
             while (true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
@@ -50,7 +50,7 @@ public class VirtualPC implements Runnable {
             DatagramSocket socket = new DatagramSocket();
             String frameData = destinationMAC + "," + message;
             byte[] sendData = frameData.getBytes();
-            InetAddress address = InetAddress.getByName(ipAddress);
+            InetAddress address = InetAddress.getByName(ip);
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
             socket.send(sendPacket);
             socket.close();
@@ -59,40 +59,45 @@ public class VirtualPC implements Runnable {
         }
     }
 
-    public static void main(String[] args) {
-        Switch ethernetSwitch = new Switch("s1", 3000);
-        VirtualPC pc = new VirtualPC("127.0.0.1", "5000", "A", ethernetSwitch);
-        Thread pcThread = new Thread(pc);
-        pcThread.start();
 
-
-        // Wait for user input
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        while (true) {
-            try {
-                System.out.print("Enter destination MAC address: ");
-                String destinationMAC = reader.readLine();
-                System.out.print("Enter message: ");
-                String message = reader.readLine();
-                pc.sendMessage(destinationMAC, message);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public void startUserInputListener() {
+        Future<String> userInputFuture = executor.submit(new UserMessage());
+        try {
+            String userInput = userInputFuture.get();
+            System.out.println("User input: " + userInput);
+            // Process user input as needed
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public class UserMessage implements Callable<String> {
-        //Create new executor in the PC class
-        Executors service = Executors.newFixedThreadPool();
-        //call service.submit to submit an instance of the UserMessage task
+    public void shutdown() {
+        executor.shutdown();
+    }
+
+    private class UserMessage implements Callable<String> {
         @Override
         public String call() throws Exception {
             Scanner scanner = new Scanner(System.in);
             System.out.println("Please enter your message:");
-            String userInput = scanner.nextLine();
-            return userInput;
+            return scanner.nextLine();
         }
     }
+
+//    public static void main(String[] args) {
+//        Switch ethernetSwitch = new Switch();
+//        VirtualPC pc = new VirtualPC("127.0.0.1", "5000", "A", ethernetSwitch);
+//        Thread pcThread = new Thread(pc);
+//        pcThread.start();
+//
+//
+//        // Wait for user input
+//        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+//        while (true) {
+//            pc.startUserInputListener();
+//        }
+//    }
 }
+
 
 
