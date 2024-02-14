@@ -1,7 +1,7 @@
 public class Device {
-    String name;
-    String ip;
-    int port;
+    protected String name;
+    protected String ip;
+    protected int port;
 
     public Device(String name, String ip, Integer port) {
         this.name = name;
@@ -9,15 +9,15 @@ public class Device {
         this.port = port;
     }
 
-    public String getName() {
-        return name;
+    public String setName(String newName) {
+        return name = newName;
     }
 
-    public String getIp() {
-        return ip;
+    public String setIp(String newIp) {
+        return ip = newIp;
     }
 
-    public Integer getPort() {
-        return port;
+    public Integer setPort(Integer newPort) {
+        return port = newPort;
     }
 }
