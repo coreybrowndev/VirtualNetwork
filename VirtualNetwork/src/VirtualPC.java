@@ -26,10 +26,23 @@ public class VirtualPC extends Device implements Runnable {
 
     public void run() {
         try {
+            //listens for incoming udp packets
             DatagramSocket socket = new DatagramSocket(port);
             byte[] receiveData = new byte[1024];
+            // Create a new thread for user input
+            Thread userInputThread = new Thread(() -> {
+                Scanner scanner = new Scanner(System.in);
+                while (true) {
+                    System.out.println("Please enter your message:");
+                    String userInput = scanner.nextLine();
+                    // Process user input as needed
+                    // For now, just print the message
+                    System.out.println("User input: " + userInput);
+                }
+            });
+            userInputThread.start();
+
             while (true) {
-                //TODO: Scanner in a separate thread for user input
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(receivePacket);
                 String receivedData = new String(receivePacket.getData(), 0, receivePacket.getLength());
@@ -46,6 +59,7 @@ public class VirtualPC extends Device implements Runnable {
             e.printStackTrace();
         }
     }
+
 
 //    public void sendMessage(String destinationMAC, String message) {
 //        try {
