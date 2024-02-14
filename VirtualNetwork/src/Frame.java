@@ -1,7 +1,9 @@
 class Frame {
-    private String srcMac;
-    private String destMac;
-    private String message;
+    public String srcMac;
+    public String destMac;
+    public String message;
+    String srcIp;
+    int inPort;
 
     public Frame(String srcMac, String message, String destMac) {
         this.srcMac = srcMac;

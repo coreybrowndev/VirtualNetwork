@@ -1,51 +1,52 @@
-import org.json.simple.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-public class Switch extends Device{
-
+public class Switch {
+    String name;
+    int port;
     Map<String, String> forwardingTable;
+    List<Device> connectedDevices;
 
-    public Switch(String name) {
-        super(name);
+
+    public Switch(String name, int port) {
+        this.name = name;
+        this.port = port;
         this.forwardingTable = new HashMap<>();
+        this.connectedDevices = new ArrayList<>();
     }
 
-    //TODO get sender's UDP Packet
-//    public void receiveFrame(Frame frame) {
-//        String sourceMac = frame.getSrcMac();
-//        if (!forwardingTable.containsKey(sourceMac)) {
-//            forwardingTable.put(sourceMac, "ip + port of the UDP");
-//        }
-//        sendUDP();
-//    }
+    public void receiveFrame(Frame frame) {
+        String sourceMac = frame.srcMac;
+        String senderInfo = frame.srcIp + ":" + frame.inPort;
+        if (!forwardingTable.containsKey(sourceMac)) {
+            forwardingTable.put(sourceMac, senderInfo);
+        }
+    }
+
 
     public void forwardFrame(Frame frame) {
-
-    }
-
-    public void learningAlgorithm(Frame frame) {
-        if (forwardingTable.containsKey(frame.getDestMac())) {
-            String destinationPort = forwardingTable.get(frame.getDestMac());
-            System.out.println("Forwarding frame to port " + destinationPort);
+        if (forwardingTable.containsKey(frame.destMac)) {
+            String destinationInfo = forwardingTable.get(frame.destMac);
+            System.out.println("Forwarding frame to " + destinationInfo);
         } else {
-            for(Device device : connectedDevices){
-                if(! "UDP packet: srcIP + port".equals(device.ip + device.port)){
-                    forwardFrame(frame);
-                }
+            System.out.println("Destination MAC address not found in forwarding table. Flooding the frame.");
+            floodFrame(frame);
+        }
+    }
+    private void floodFrame(Frame frame) {
+        for (Device device : connectedDevices) {
+            if (device.getPort() != frame.inPort) {
+                System.out.println("Flooding frame to " + device.getName());
+                // You may want to send the frame to these devices using a sendMessage() method if available
             }
         }
     }
 
-    public static void main(String[] args) {
-       Switch S1 = new Switch(args[1]);
+
+    public void connect(Device device) {
+        connectedDevices.add(device);
+        System.out.println(device.getName() + " connected to " + name);
     }
 }
-
-
