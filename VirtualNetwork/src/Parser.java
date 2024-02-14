@@ -11,24 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Parser {
-//    public static String collectJsonAsString(String filename) {
-//        //take the device and find the device in the config file, use the algorithm to build the relationship and return a new json file with the relationship built for the device in question
-//                        //first parse links to get the neighors from "s1" for example, then parse the devices to get the IP and port for each neighbor
-//        //open file
-//        String jsonText = "";
-//
-//        try {
-//            BufferedReader bufferedReader = new BufferedReader(new FileReader(filename));
-//
-//            String line;
-//            while((line = bufferedReader.readLine()) != null) {
-//                jsonText += line + "\n";
-//            }
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return jsonText;
-//    }
+
 
     public static JSONObject parseJSONFile(String filename) {
         try {
@@ -41,70 +24,49 @@ public class Parser {
         return null;
     }
 
-    public static void updateDeviceConnections(JSONObject data) {
-        JSONArray switches = (JSONArray) data.get("switches");
-        JSONArray devices = (JSONArray) data.get("devices");
-        JSONArray links = (JSONArray) data.get("links");
-
-        Map<String, Integer> switchPortMap = new HashMap<>();
-        for(Object obj : switches) {
-            JSONObject switchObj = (JSONObject) obj;
-            switchPortMap.put((String) switchObj.get("name"), Math.toIntExact((Long) switchObj.get("port")));
-        }
-
-        Map<String, String> deviceIPMap = new HashMap<>();
-        for(Object obj : devices) {
+    private static Device getDeviceInfo(JSONArray devices, JSONArray switches, String deviceName) {
+        for (Object obj : devices) {
             JSONObject deviceObj = (JSONObject) obj;
-            deviceIPMap.put((String) deviceObj.get("name"), (String) deviceObj.get("ip"));
+            if (deviceObj.get("name").equals(deviceName)) {
+                return new Device((String) deviceObj.get("name"), (String) deviceObj.get("ip"), Math.toIntExact((Long) deviceObj.get("port")));
+            }
         }
 
-        Map<String, String> switchDeviceMap = new HashMap<>();
+        for (Object obj : switches) {
+            JSONObject switchObj = (JSONObject) obj;
+            if (switchObj.get("name").equals(deviceName)) {
+                return new Device((String) switchObj.get("name"), (String) switchObj.get("ip"),
+                        Math.toIntExact((Long) switchObj.get("port")));
+            }
+        }
+        return null;
+    }
+
+    public static List<Device> getNeighbors(JSONObject data, String deviceName) {
+        JSONArray links = (JSONArray) data.get("links");
+        JSONArray devices = (JSONArray) data.get("devices");
+        JSONArray switches = (JSONArray) data.get("switches");
+        JSONArray neighbors = new JSONArray();
+
         for (Object obj : links) {
             JSONObject linkObj = (JSONObject) obj;
-            String switchName = (String) linkObj.get("node1");
-            String deviceName = (String) linkObj.get("node2");
-            switchDeviceMap.put(switchName, deviceName);
-        }
+            String node1 = (String) linkObj.get("node1");
+            String node2 = (String) linkObj.get("node2");
 
-        JSONArray updatedDevices = new JSONArray();
-        for(Object obj : devices) {
-            JSONObject deviceObj = (JSONObject) obj;
-            String deviceName = (String) deviceObj.get("name");
-            String deviceIP = deviceIPMap.get(deviceName);
-            String connectedSwitch = null;
-            Integer port = null;
-            for(Object link : links) {
-                JSONObject linkObj = (JSONObject) link;
-                if(deviceName.equals(linkObj.get("node2"))){
-                    connectedSwitch = (String) linkObj.get("node1");
-                    port = switchPortMap.get(connectedSwitch);
-                    break;
-                }
+            if (node1.equals(deviceName)) {
+                neighbors.add(getDeviceInfo(devices, switches, node2));
+            } else if (node2.equals(deviceName)) {
+                neighbors.add(getDeviceInfo(devices, switches, node1));
             }
-            JSONObject updatedDevice = new JSONObject();
-            updatedDevice.put("name", deviceName);
-            updatedDevice.put("ip", deviceIP);
-            updatedDevice.put("connectedDevice", connectedSwitch);
-            updatedDevice.put("port", port);
-            updatedDevices.add(updatedDevice);
         }
-        data.put("devices", updatedDevices);
+        return neighbors;
     }
-
-    public static void writeJsonToFile(JSONObject data, String filename) {
-        try(FileWriter file = new FileWriter(filename)) {
-            file.write(data.toJSONString());
-            file.flush();
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void main(String[] args) {
         JSONObject jsonData = parseJSONFile("src/NetworkConfig.json");
         if(jsonData != null) {
-            updateDeviceConnections(jsonData);
-            writeJsonToFile(jsonData, "UpdatedNetworkConfig.json");
+            String deviceName = "s1";
+            List<Device> neighbors = getNeighbors(jsonData, deviceName);
+
             System.out.println("Updated JSON File");
         }else {
             System.out.println("Failed to parse file");

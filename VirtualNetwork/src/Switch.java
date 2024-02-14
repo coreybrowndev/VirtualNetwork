@@ -6,13 +6,16 @@ import java.util.Map;
 public class Switch {
     String name;
     int port;
+
+    String ip;
     Map<String, String> forwardingTable;
     List<Device> connectedDevices;
 
 
-    public Switch(String name, int port) {
+    public Switch(String name, int port, String ip) {
         this.name = name;
         this.port = port;
+        this.ip = ip;
         this.forwardingTable = new HashMap<>();
         this.connectedDevices = new ArrayList<>();
     }

@@ -2,6 +2,10 @@
 public class Main {
     public static void main(String[] args) {
 
+        //----device class-----
+            //ip
+            // port
+
 //        Filler info
         Device deviceA = new Device("A", "192.168.1.2");
         Device deviceB = new Device("B", "192.168.1.4");
