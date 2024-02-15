@@ -28,34 +28,34 @@ public class Parser {
         for (Object obj : devices) {
             JSONObject deviceObj = (JSONObject) obj;
             if (deviceObj.get("name").equals(deviceName)) {
-                return deviceObj.get("ip").toString();
+                return (String) deviceObj.get("ip");
             }
         }
 
         for (Object obj : switches) {
             JSONObject switchObj = (JSONObject) obj;
             if (switchObj.get("name").equals(deviceName)) {
-                return switchObj.get("ip").toString();
+                return (String) switchObj.get("ip");
             }
         }
         return "";
     }
 
-    public static Integer getDevicePort(JSONObject data, String deviceName) {
+    public static Long getDevicePort(JSONObject data, String deviceName) {
         JSONArray devices = (JSONArray) data.get("devices");
         JSONArray switches = (JSONArray) data.get("switches");
 
         for (Object obj : devices) {
             JSONObject deviceObj = (JSONObject) obj;
             if (deviceObj.get("name").equals(deviceName)) {
-                return Integer.parseInt(deviceObj.get("port").toString());
+                return ((Long) deviceObj.get("port"));
             }
         }
 
         for (Object obj : switches) {
             JSONObject switchObj = (JSONObject) obj;
             if (switchObj.get("name").equals(deviceName)) {
-                return Integer.parseInt(switchObj.get("port").toString());
+                return ((Long) switchObj.get("port"));
             }
         }
         return null;
@@ -68,6 +68,7 @@ public class Parser {
             if (deviceObj.get("name").equals(deviceName)) {
                 return new Device((String) deviceObj.get("name"));
             }
+            return null;
         }
 
         for (Object obj : switches) {
@@ -75,6 +76,7 @@ public class Parser {
             if (switchObj.get("name").equals(deviceName)) {
                 return new Device((String) switchObj.get("name"));
             }
+            return null;
         }
         return null;
     }
@@ -83,7 +85,7 @@ public class Parser {
         JSONArray links = (JSONArray) data.get("links");
         JSONArray devices = (JSONArray) data.get("devices");
         JSONArray switches = (JSONArray) data.get("switches");
-        JSONArray neighbors = new JSONArray();
+        List<Device> neighbors = new ArrayList<>();
 
         for (Object obj : links) {
             JSONObject linkObj = (JSONObject) obj;

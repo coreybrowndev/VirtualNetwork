@@ -7,7 +7,7 @@ import java.util.Objects;
 public class Device {
     protected String name;
     protected String ip;
-    protected int port;
+    protected Long port;
 
     protected List<Device> connectedDevices;
 
@@ -16,6 +16,7 @@ public class Device {
 
     public Device(String name) {
         //Use Parser to get ip and port of the device
+        this.name = name;
          ip = Parser.getDeviceIp(jsonData, name);
          port = Parser.getDevicePort(jsonData, name);
         connectedDevices = Parser.getNeighbors(jsonData, this.name);
@@ -31,7 +32,7 @@ public class Device {
     }
 
     // Getter method for the port property
-    public int getPort() {
+    public Long getPort() {
         return port;
     }
 

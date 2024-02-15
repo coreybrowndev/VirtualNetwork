@@ -21,13 +21,14 @@ public class VirtualPC extends Device implements Runnable {
         this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
         //TODO: create new task
         //TODO: submit task
+        executor.submit(new UserMessage());
     }
 
 
     public void run() {
         try {
             //listens for incoming udp packets
-            DatagramSocket socket = new DatagramSocket(port);
+            DatagramSocket socket = new DatagramSocket(Math.toIntExact(port));
             byte[] receiveData = new byte[1024];
             // Create a new thread for user input
             Thread userInputThread = new Thread(() -> {
@@ -91,7 +92,7 @@ public class VirtualPC extends Device implements Runnable {
         executor.shutdown();
     }
 
-    private class UserMessage implements Callable<String> {
+    private static class UserMessage implements Callable<String> {
         @Override
         public String call() throws Exception {
             Scanner scanner = new Scanner(System.in);
