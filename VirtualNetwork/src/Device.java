@@ -44,6 +44,7 @@ public class Device {
     //TODO: receive and send udp packet
 
 
+
     //TODO: UDP datagram packet (srcIP, srcPort, frame would be the payload)
     //TODO: 1 threads for receiving one for taking input and build UDP packet
 

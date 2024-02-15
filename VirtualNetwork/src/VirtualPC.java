@@ -1,3 +1,4 @@
+import javax.xml.crypto.Data;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,8 +20,7 @@ public class VirtualPC extends Device implements Runnable {
         super(name);
         virtualMACAddress = name;
         this.executor = Executors.newSingleThreadExecutor(); // Initialize executor service
-        //TODO: create new task
-        //TODO: submit task
+        //This creates and submits a new task to the executor
         executor.submit(new UserMessage());
     }
 
@@ -30,26 +30,17 @@ public class VirtualPC extends Device implements Runnable {
             //listens for incoming udp packets
             DatagramSocket socket = new DatagramSocket(Math.toIntExact(port));
             byte[] receiveData = new byte[1024];
-            // Create a new thread for user input
-            Thread userInputThread = new Thread(() -> {
-                Scanner scanner = new Scanner(System.in);
-                while (true) {
-                    System.out.println("Please enter your message:");
-                    String userInput = scanner.nextLine();
-                    // Process user input as needed
-                    // For now, just print the message
-                    System.out.println("User input: " + userInput);
-                }
-            });
-            userInputThread.start();
 
-            while (true) {
+            while(true) {
                 DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                 socket.receive(receivePacket);
+
                 String receivedData = new String(receivePacket.getData(), 0, receivePacket.getLength());
                 String[] frameElements = receivedData.split(",");
                 String destinationMAC = frameElements[0];
                 String message = frameElements[1];
+//                System.out.println("DESTA: " + destinationMAC);
+
                 if (destinationMAC.equals(virtualMACAddress)) {
                     System.out.println("Received message: " + message);
                 } else {
@@ -62,25 +53,26 @@ public class VirtualPC extends Device implements Runnable {
     }
 
 
-//    public void sendMessage(String destinationMAC, String message) {
-//        try {
-//            DatagramSocket socket = new DatagramSocket();
-//            String frameData = destinationMAC + "," + message;
-//            byte[] sendData = frameData.getBytes();
-//            InetAddress address = InetAddress.getByName(ip);
-//            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
-//            socket.send(sendPacket);
-//            socket.close();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    public void sendMessage(String destinationMAC, String message) {
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            String frameData = destinationMAC + "," + message;
+            byte[] sendData = frameData.getBytes();
+            InetAddress address = InetAddress.getByName(ip);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
+            socket.send(sendPacket);
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 
     public void startUserInputListener() {
         Future<String> userInputFuture = executor.submit(new UserMessage());
         try {
             String userInput = userInputFuture.get();
+            sendMessage(userInput.split("")[0], userInput.split(" ")[1]);
             System.out.println("User input: " + userInput);
             // Process user input as needed
         } catch (Exception e) {
@@ -96,8 +88,11 @@ public class VirtualPC extends Device implements Runnable {
         @Override
         public String call() throws Exception {
             Scanner scanner = new Scanner(System.in);
+            System.out.println("Please enter the destination MAC address:");
+            String destinationMAC = scanner.nextLine();
             System.out.println("Please enter your message:");
-            return scanner.nextLine();
+            String message = scanner.nextLine();
+            return  destinationMAC + " " + message;
         }
     }
 
