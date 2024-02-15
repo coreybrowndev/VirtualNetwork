@@ -19,11 +19,11 @@ public class Switch {
 
     public void receiveFrame(Frame frame) {
         String sourceMac = frame.srcMac;
-        String senderInfo = frame.srcIp + ":" + frame.inPort;
         if (!forwardingTable.containsKey(sourceMac)) {
-            forwardingTable.put(sourceMac, senderInfo);
+            forwardingTable.put(sourceMac, frame.payload);
         }
     }
+
 
 
     public void forwardFrame(Frame frame) {
@@ -39,7 +39,10 @@ public class Switch {
         for (Device device : connectedDevices) {
             if (device.getPort() != frame.inPort) {
                 System.out.println("Flooding frame to " + device.getName());
-                // You may want to send the frame to these devices using a sendMessage() method if available
+                if (device instanceof VirtualPC) {
+                    VirtualPC virtualPC = (VirtualPC) device;
+                    virtualPC.sendMessage(frame);
+                }
             }
         }
     }

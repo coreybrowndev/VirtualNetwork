@@ -67,5 +67,9 @@ public class Device {
     public int hashCode() {
         return Objects.hash(name, ip, port);
     }
+    public void sendMessage(Frame frame) {
+        System.out.println("Received frame: " + frame.toString());
+    }
+
 
 }
