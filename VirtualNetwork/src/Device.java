@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.net.DatagramPacket;
 import java.net.SocketException;
-
+import java.net.InetAddress;
+import java.net.DatagramPacket;
 
 
 public class Device {
@@ -30,17 +31,15 @@ public class Device {
         return this.name;
     }
 
-    // Getter method for the ip property
+
     public String getIp() {
         return ip;
     }
 
-    // Getter method for the port property
     public Long getPort() {
         return port;
     }
 
-    // Getter method for the connectedDevices property
     public List<Device> getConnectedDevices() {
         return connectedDevices;
     }
@@ -65,7 +64,17 @@ public class Device {
 
 
 
-    //TODO: UDP datagram packet (srcIP, srcPort, frame would be the payload)
+    public void sendUDPPacket(String destinationIP, int destinationPort, String payload) {
+        try {
+            byte[] sendData = payload.getBytes();
+            DatagramSocket socket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(destinationIP), destinationPort);
+            socket.send(packet);
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     //TODO: 1 threads for receiving one for taking input and build UDP packet
 
     @Override
