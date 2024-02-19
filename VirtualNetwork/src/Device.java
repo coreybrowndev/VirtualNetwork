@@ -1,8 +1,12 @@
 import org.json.simple.JSONObject;
-
+import java.net.DatagramSocket;
 import java.security.ProtectionDomain;
 import java.util.List;
 import java.util.Objects;
+import java.net.DatagramPacket;
+import java.net.SocketException;
+
+
 
 public class Device {
     protected String name;
@@ -41,7 +45,23 @@ public class Device {
         return connectedDevices;
     }
 
-    //TODO: receive and send udp packet
+    public void receivePacket() {
+        try {
+            DatagramSocket socket = new DatagramSocket(port.intValue());
+
+            byte[] buffer = new byte[1024];
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+            while (true) {
+                socket.receive(packet);
+                String data = new String(packet.getData(), 0, packet.getLength());
+                System.out.println("Received UDP packet: " + data);
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 
