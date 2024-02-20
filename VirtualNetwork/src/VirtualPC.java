@@ -59,7 +59,7 @@ public class VirtualPC extends Device implements Runnable {
             String frameData = destinationMAC + "," + message;
             byte[] sendData = frameData.getBytes();
             InetAddress address = InetAddress.getByName(ip);
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(portNumber));
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, address, Integer.parseInt(String.valueOf(port)));
             socket.send(sendPacket);
             socket.close();
         } catch (IOException e) {

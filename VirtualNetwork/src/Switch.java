@@ -25,9 +25,6 @@ public class Switch {
     }
 
 
-
-
-
     public void forwardFrame(Frame frame) {
         if (forwardingTable.containsKey(frame.destMac)) {
             String destinationInfo = forwardingTable.get(frame.destMac);
