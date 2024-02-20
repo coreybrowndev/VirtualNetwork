@@ -39,8 +39,8 @@ public class Switch {
             if (device.getPort() != frame.inPort) {
                 System.out.println("Flooding frame to " + device.getName());
                 if (device instanceof VirtualPC) {
-                    VirtualPC virtualPC = (VirtualPC) device;
-                    virtualPC.sendMessage(frame);
+//                    VirtualPC virtualPC = (VirtualPC) device;
+                    //send message to everyone
                 }
             }
         }

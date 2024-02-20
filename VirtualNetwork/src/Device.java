@@ -47,34 +47,8 @@ public class Device {
         return connectedDevices;
     }
 
-    public void receivePacket() {
-        try {
-            DatagramSocket socket = new DatagramSocket(port.intValue());
-
-            byte[] buffer = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            while (true) {
-                socket.receive(packet);
-                String data = new String(packet.getData(), 0, packet.getLength());
-                System.out.println("Received UDP packet: " + data);
-
-                //if the name is the Same as the destination from the UDP, print message, else flood.
-
-
-
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
     static class Sender implements Runnable{
-
         private InetSocketAddress destination;
-
         private String message;
 
         public Sender(InetSocketAddress address, String message){
@@ -103,8 +77,6 @@ public class Device {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-
-            socket.close();
         }
     }
     static class Receiver implements Runnable {
@@ -128,8 +100,9 @@ public class Device {
                     //extract the information data
                     Frame receivedFrame = Frame.deserialize(data);
 
-                    //Figure out after this
-
+                    if(receivedFrame.destMac.equals(this.device.name)) {
+                        System.out.println("\nMesssage: " + receivedFrame.message);
+                    }
                 }
             } catch (SocketException e) {
                 throw new RuntimeException(e);
@@ -139,9 +112,10 @@ public class Device {
         }
     }
 
+    //TODO: 1 threads for receiving one for taking input and build UDP packet
 
     //Prepare a UDP packet containing the virtual frame and send it to the connected switch.
-    public void sendUDPPacket(String destinationIP, int destinationPort, String payload) {
+    public void constructUDPacket(String destinationIP, int destinationPort, String payload) {
         try {
             byte[] sendData = payload.getBytes();
             DatagramSocket socket = new DatagramSocket();
@@ -152,9 +126,10 @@ public class Device {
             e.printStackTrace();
         }
     }
-    //TODO: 1 threads for receiving one for taking input and build UDP packet
 
-
+    public void sendMessage(Frame frame, String destinationIP, int destinationPort) {
+        new Thread(new Sender(new InetSocketAddress(destinationIP, destinationPort), frame.serialize())).start();
+    }
 
     @Override
     public String toString() {
@@ -177,9 +152,4 @@ public class Device {
     public int hashCode() {
         return Objects.hash(name, ip, port);
     }
-    public void sendMessage(Frame frame) {
-        System.out.println("Received frame: " + frame.toString());
-    }
-
-
 }
