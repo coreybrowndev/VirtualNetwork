@@ -97,7 +97,7 @@ public class VirtualPC extends Device implements Runnable {
     }
 
     public static void main(String[] args) {
-        VirtualPC pc = new VirtualPC(args[1]);
+        VirtualPC pc = new VirtualPC(args[0]);
         Thread pcThread = new Thread(pc);
         pcThread.start();
 

@@ -100,8 +100,16 @@ public class Device {
                     //extract the information data
                     Frame receivedFrame = Frame.deserialize(data);
 
-                    if(receivedFrame.destMac.equals(this.device.name)) {
-                        System.out.println("\nMesssage: " + receivedFrame.message);
+                    SocketAddress socketAddress = packet.getSocketAddress();
+                    if (socketAddress instanceof InetSocketAddress) {
+                        InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+                        String sourceIP = inetSocketAddress.getAddress().getHostAddress();
+                        int sourcePort = inetSocketAddress.getPort();
+
+                        System.out.println("Received packet from " + sourceIP + ":" + sourcePort);
+
+                        // Here you can further process the packet or extract other information as needed
+                        // For example, you can access the packet's data using packet.getData()
                     }
                 }
             } catch (SocketException e) {
