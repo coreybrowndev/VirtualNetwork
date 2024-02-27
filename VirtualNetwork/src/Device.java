@@ -1,7 +1,8 @@
 import org.json.simple.JSONObject;
 
-import javax.xml.crypto.Data;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.*;
 import java.util.List;
 import java.util.Objects;
@@ -22,12 +23,18 @@ public class Device {
         //Use Parser to get ip and port of the device
         this.name = name;
          ip = Parser.getDeviceIp(jsonData, name);
-         port = Parser.getDevicePort(jsonData, name);
+         this.port = Parser.getDevicePort(jsonData, name);
         connectedDevices = Parser.getNeighbors(jsonData, this.name);
     }
 
     public void run() {
-        //Start the two threads for both receiving and sending to neighbor nodes
+        try{
+            Sender sender = new Sender(name);
+            Thread senderThread = new Thread(sender);
+            senderThread.start();
+        }catch (RuntimeException e) {
+            e.printStackTrace();
+        }
     }
 
     protected String getName() {
@@ -47,96 +54,88 @@ public class Device {
         return connectedDevices;
     }
 
-    static class Sender implements Runnable{
-        private InetSocketAddress destination;
-        private String message;
 
-        public Sender(InetSocketAddress address, String message){
-            this.destination = address;
-            this.message = message;
-        }
+    class Sender implements Runnable {
+        private final String senderName;
 
-        @Override
-        public void run() {
+        Sender(String senderName) {
+            this.senderName = senderName;
 
-            DatagramSocket socket = null;
-
-            try {
-                socket = new DatagramSocket();
-            } catch (SocketException e) {
-                throw new RuntimeException(e);
-            }
-
-            DatagramPacket request = new DatagramPacket(message.getBytes(),
-                    message.getBytes().length,
-                    destination
-            );
-
-            try {
-                socket.send(request);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-    static class Receiver implements Runnable {
-        //grab packet, look at headers that contain the src IP
-        private final Device device;
-
-        Receiver(Device device) {
-            this.device = device;
         }
 
         public void run() {
             try {
-                DatagramSocket socket = new DatagramSocket(device.getPort().intValue());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                while (true) {
+                    System.out.println("Enter Destination PC");
+                    String pcName = reader.readLine();
 
-                while(true) {
-                    socket.receive(packet);
-                    String data = new String(packet.getData(), 0, packet.getLength());
-                    //extract the information data
-                    Frame receivedFrame = Frame.deserialize(data);
+//                    String destIp = Parser.getDeviceIp(jsonData, pcName);
+//                    Long destPort = Parser.getDevicePort(jsonData, pcName);
 
-                    SocketAddress socketAddress = packet.getSocketAddress();
-                    if (socketAddress instanceof InetSocketAddress) {
-                        InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-                        String sourceIP = inetSocketAddress.getAddress().getHostAddress();
-                        int sourcePort = inetSocketAddress.getPort();
+                    String switchIp = Parser.getDeviceIp(jsonData, senderName);
+                    Long switchPort = Parser.getDevicePort(jsonData, senderName);
 
-                        System.out.println("Received packet from " + sourceIP + ":" + sourcePort);
+                    System.out.print("Enter message: ");
+                    String message = reader.readLine();
 
-                        // Here you can further process the packet or extract other information as needed
-                        // For example, you can access the packet's data using packet.getData()
-                    }
+                    Frame frame = new Frame(senderName, message, pcName);
+
+                    constructUDPacket(switchIp, switchPort, frame.serialize());
+
+//ignore the commented lines
+
+//                    Frame frame = new Frame(senderName, pcName, message);
+//                    constructUDPacket(destIp, destPort, frame.serialize());
+//
+//                    System.out.println("Sending frame:");
+//                    System.out.println("Source MAC: " + senderName);
+//                    System.out.println("Destination MAC: " + pcName);
+//                    System.out.println("Message: " + message);
+
+
                 }
-            } catch (SocketException e) {
-                throw new RuntimeException(e);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             }
         }
+
     }
+
 
     //TODO: 1 threads for receiving one for taking input and build UDP packet
 
-    //Prepare a UDP packet containing the virtual frame and send it to the connected switch.
-    public void constructUDPacket(String destinationIP, int destinationPort, String payload) {
+    public void constructUDPacket(String destinationIP, Long destinationPort, String payload) {
         try {
             byte[] sendData = payload.getBytes();
             DatagramSocket socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(destinationIP), destinationPort);
+            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(destinationIP), Math.toIntExact(destinationPort));
             socket.send(packet);
-            socket.close();
+            System.out.println("Packet sent: " + new String(packet.getData()));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void sendMessage(Frame frame, String destinationIP, int destinationPort) {
-        new Thread(new Sender(new InetSocketAddress(destinationIP, destinationPort), frame.serialize())).start();
+    protected void receivePacket(String data) {
+        try {
+            Frame receivedFrame = Frame.deserialize(data);
+
+            String srcMac = receivedFrame.getSrcMac();
+            String destMac = receivedFrame.getDestMac();
+            String message = receivedFrame.getMessage();
+            if (destMac.equals(name)) {
+                // If the frame is intended for this device, print the message
+                System.out.println("Received message: " + message);
+            } else {
+                // Otherwise, ignore the frame
+                System.out.println("Ignoring frame, not intended for this device");
+            }
+        } catch (Exception e) {
+            // Handle any exceptions that occur during frame deserialization or processing
+            e.printStackTrace();
+        }
     }
 
     @Override

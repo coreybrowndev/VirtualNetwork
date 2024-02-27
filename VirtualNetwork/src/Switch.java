@@ -1,83 +1,105 @@
+import javax.xml.crypto.Data;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Switch {
-    String name;
-    int port;
+public class Switch extends Device {
     Map<String, String> forwardingTable;
-    List<Device> connectedDevices;
+    static List<Device> connectedDevices;
 
-    public void receiveUDP() {
-        try {
-            DatagramSocket socket = new DatagramSocket(port);
-            while (true) {
-                byte[] buffer = new byte[1024];
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-
-                socket.receive(packet);
-
-                SocketAddress socketAddress = packet.getSocketAddress();
-                if (socketAddress instanceof InetSocketAddress) {
-                    InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-                    String sourceIP = inetSocketAddress.getAddress().getHostAddress();
-                    int sourcePort = inetSocketAddress.getPort();
-                    System.out.println(sourceIP + ":" + sourcePort);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public Switch(String name, int port) {
-        this.name = name;
-        this.port = port;
+    public Switch(String name) {
+        super(name);
         this.forwardingTable = new HashMap<>();
         this.connectedDevices = new ArrayList<>();
     }
 
-    public void receiveFrame(Frame frame, String incomingPort) {
-        String sourceMac = frame.srcMac;
-        if (!forwardingTable.containsKey(sourceMac)) {
-            forwardingTable.put(sourceMac, incomingPort);
+    public void run() {
+        try {
+            DatagramSocket socket = new DatagramSocket(this.getPort().intValue());
+            Receiver receiver = new Receiver(socket);
+            Thread receiverThread = new Thread(receiver);
+            receiverThread.start();
+        }catch(SocketException e) {
+            throw new RuntimeException(e);
         }
     }
 
 
-    public void forwardFrame(Frame frame, String outgoingPort) {
-        if (forwardingTable.containsKey(frame.destMac)) {
-            String destinationInfo = forwardingTable.get(frame.destMac);
-            System.out.println("Forwarding frame to " + destinationInfo);
-        } else {
-            System.out.println("Destination MAC address not found in forwarding table. Flooding the frame.");
-            floodFrame(frame);
+    static class Receiver implements Runnable {
+        //grab packet, look at headers that contain the src IP
+        private final DatagramSocket socket;
+
+        Receiver(DatagramSocket socket) {
+            this.socket = socket;
         }
-    }
 
+        public void run() {
+            try {
+                byte[] buffer = new byte[1024];
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 
-    private void floodFrame(Frame frame) {
-        for (Device device : connectedDevices) {
-            if (device.getPort() != frame.inPort) {
-                System.out.println("Flooding frame to " + device.getName());
-                if (device instanceof VirtualPC) {
-//                    VirtualPC virtualPC = (VirtualPC) device;
-                    //send message to everyone
+                while(true) {
+                    socket.receive(packet);
+                    String data = new String(packet.getData(), 0, packet.getLength());
+
+                    System.out.println("Data: " + data);
+
+                    Switch.forwardPacket(data);
+                    //extract the information data
+                    Frame receivedFrame = Frame.deserialize(data);
+
+                    String srcMac = receivedFrame.getSrcMac();
+                    String destMac = receivedFrame.getDestMac();
+                    String message = receivedFrame.getMessage();
+
+                    System.out.println("Source MAC: " + srcMac);
+                    System.out.println("Destination MAC: " + destMac);
+
+                    if(destMac.equals("B")) {
+                        System.out.println("Received message: " + message);
+                    }
+
+                    System.out.println("Received frame:");
+                    System.out.println("Source MAC: " + srcMac);
+                    System.out.println("Destination MAC: " + destMac);
+                    System.out.println("Message: " + message);
+
+                    SocketAddress socketAddress = packet.getSocketAddress();
+                    if (socketAddress instanceof InetSocketAddress) {
+                        InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
+                        String sourceIP = inetSocketAddress.getAddress().getHostAddress();
+                        int sourcePort = inetSocketAddress.getPort();
+                        System.out.println("Received packet from " + sourceIP + ":" + sourcePort);
+                    }
                 }
+            } catch (SocketException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
 
 
-    public void connect(Device device) {
+    private static void forwardPacket(String data) {
+        // Implement forwarding logic based on the virtual destination MAC address
+        // For now, let's assume flooding to all connected devices
+        for (Device device : connectedDevices) {
+            device.receivePacket(data);
+        }
+    }
+
+    public void addConnectedDevice(Device device) {
         connectedDevices.add(device);
-        System.out.println(device.getName() + " connected to " + name);
+    }
+
+    public static void main(String[] args) {
+        Switch s1 = new Switch(args[0]);
+        Long myPort = s1.getPort();
+        System.out.println("Switch port currently" + myPort);
+        s1.run();
     }
 }

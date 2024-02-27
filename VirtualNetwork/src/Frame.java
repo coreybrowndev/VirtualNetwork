@@ -18,6 +18,8 @@ class Frame {
         return this.destMac;
     }
 
+    public String getMessage(){return this.message;}
+
     public String serialize() {
         return srcMac + ':' + destMac + ":" + message;
     }
